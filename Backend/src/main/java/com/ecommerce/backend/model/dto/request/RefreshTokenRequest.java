@@ -1,0 +1,20 @@
+package com.ecommerce.backend.model.dto.request;
+
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * @author Taoufiq
+ */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class RefreshTokenRequest {
+
+    @NotBlank(message = "Refresh token is required")
+    private String refreshToken;
+}
+

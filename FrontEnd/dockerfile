@@ -1,0 +1,28 @@
+# Use Node 20
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Disable telemetry for CI/Docker
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Force dynamic rendering pages to skip static prerendering
+RUN npm run build
+
+# --- Production stage ---
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/middleware.ts ./
+
+EXPOSE 3000
+CMD ["npm", "start"]
