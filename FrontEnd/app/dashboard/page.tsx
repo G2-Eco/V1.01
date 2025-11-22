@@ -58,6 +58,16 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-gray-900">Mon E-Commerce</h1>
             </div>
 
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-2">
+              <Link
+                href="/products"
+                className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium"
+              >
+                Produits
+              </Link>
+            </nav>
+
             {/* User Menu */}
             <div className="relative">
               <button

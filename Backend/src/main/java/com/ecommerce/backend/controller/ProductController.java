@@ -1,41 +1,41 @@
 package com.ecommerce.backend.controller;
 
 
-import com.ecommerce.backend.model.entity.Product;
+import com.ecommerce.backend.model.dto.ProductDTO;
 import com.ecommerce.backend.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService service;
 
-    public ProductController(ProductService service) {
-        this.service = service;
-    }
-
-    @GetMapping
-    public List<Product> getAll() {
-        return service.findAll();
+    @PostMapping
+    public ProductDTO create(@RequestBody ProductDTO dto) {
+        return service.create(dto);
     }
 
     @GetMapping("/{id}")
-    public Product getById(@PathVariable Long id) {
-        return service.findById(id);
+    public ProductDTO getById(@PathVariable Long id) {
+        return service.getById(id);
     }
 
-    @PostMapping
-    public Product create(@RequestBody Product product) {
-        return service.save(product);
+    @GetMapping
+    public List<ProductDTO> getAll() {
+        return service.getAll();
     }
 
     @PutMapping("/{id}")
-    public Product update(@PathVariable Long id, @RequestBody Product product) {
-        product.setId(id);
-        return service.save(product);
+    public ProductDTO update(
+            @PathVariable Long id,
+            @RequestBody ProductDTO dto
+    ) {
+        return service.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
