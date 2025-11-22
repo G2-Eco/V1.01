@@ -1,21 +1,60 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
-export default function DashboardPage() {
-  const { user, isAuthenticated, loading, logout } = useAuth();
+export default function CreateProductPage() {
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    itemName: '',
+    categories: '',
+    initialPrice: '',
+    mainImage: '',
+    tags: ''
+  });
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push('/login');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:8080/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          initialPrice: parseFloat(formData.initialPrice)
+        }),
+      });
+
+      if (response.ok) {
+        router.push('/products');
+        router.refresh();
+      } else {
+        console.error('Erreur lors de la création du produit');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [isAuthenticated, loading, router]);
+  };
 
   const handleLogout = async () => {
     try {
@@ -25,7 +64,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -74,9 +113,9 @@ export default function DashboardPage() {
           <nav className="flex-1 p-4 space-y-2">
             <Link
               href="/dashboard"
-              className="flex items-center space-x-3 px-4 py-3 text-blue-600 bg-blue-50 rounded-xl transition-colors font-medium group"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium group"
             >
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
               {sidebarOpen && <span>Tableau de bord</span>}
@@ -84,9 +123,9 @@ export default function DashboardPage() {
 
             <Link
               href="/products"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium group"
+              className="flex items-center space-x-3 px-4 py-3 text-blue-600 bg-blue-50 rounded-xl transition-colors font-medium group"
             >
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               {sidebarOpen && <span>Produits</span>}
@@ -110,27 +149,6 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               {sidebarOpen && <span>Clients</span>}
-            </Link>
-
-            <Link
-              href="/analytics"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium group"
-            >
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {sidebarOpen && <span>Analytiques</span>}
-            </Link>
-
-            <Link
-              href="/settings"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium group"
-            >
-              <svg className="w-6 h-6 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {sidebarOpen && <span>Paramètres</span>}
             </Link>
           </nav>
 
@@ -160,7 +178,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center h-20 px-8">
             {/* Page Title - Centered and Larger */}
             <div className="flex-1 text-center">
-              <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Nouveau Produit</h1>
             </div>
 
             {/* User Menu */}
@@ -234,46 +252,136 @@ export default function DashboardPage() {
 
         {/* Main Content */}
         <main className="flex-1 p-8">
-          {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-8 mb-8 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">Bienvenue, {user.firstName} ! 👋</h2>
-                <p className="text-blue-100 text-lg">Ravi de vous revoir</p>
+          <div className="max-w-2xl mx-auto">
+            {/* Form Card */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">Informations du produit</h2>
+                <p className="text-gray-600 mt-1">Remplissez les informations pour créer un nouveau produit</p>
               </div>
-              <div className="hidden md:block">
-                <svg className="w-32 h-32 opacity-20" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                </svg>
-              </div>
+
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Product Name */}
+                <div>
+                  <label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom du produit *
+                  </label>
+                  <input
+                    type="text"
+                    id="itemName"
+                    name="itemName"
+                    value={formData.itemName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Entrez le nom du produit"
+                  />
+                </div>
+
+                {/* Categories */}
+                <div>
+                  <label htmlFor="categories" className="block text-sm font-medium text-gray-700 mb-2">
+                    Catégories *
+                  </label>
+                  <input
+                    type="text"
+                    id="categories"
+                    name="categories"
+                    value={formData.categories}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Ex: Électronique, Vêtements, Maison..."
+                  />
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label htmlFor="initialPrice" className="block text-sm font-medium text-gray-700 mb-2">
+                    Prix initial *
+                  </label>
+                  <input
+                    type="number"
+                    id="initialPrice"
+                    name="initialPrice"
+                    value={formData.initialPrice}
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    min="0"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {/* Image URL */}
+                <div>
+                  <label htmlFor="mainImage" className="block text-sm font-medium text-gray-700 mb-2">
+                    URL de l'image *
+                  </label>
+                  <input
+                    type="url"
+                    id="mainImage"
+                    name="mainImage"
+                    value={formData.mainImage}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags
+                  </label>
+                  <input
+                    type="text"
+                    id="tags"
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Ex: nouveau, populaire, promotion"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Séparez les tags par des virgules</p>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex gap-4 pt-6">
+                  <Link
+                    href="/products"
+                    className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-center"
+                  >
+                    Annuler
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Création...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Créer le produit</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-
-          {/* Email Verification Warning */}
-          {!user.emailVerified && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-6 mb-8">
-              <div className="flex items-start">
-                <svg className="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <div className="flex-1">
-                  <h3 className="text-yellow-800 font-semibold mb-1">Vérifiez votre email</h3>
-                  <p className="text-yellow-700 text-sm mb-3">
-                    Votre adresse email n'est pas encore vérifiée. Veuillez consulter votre boîte de réception.
-                  </p>
-                  <Link
-                    href="/resend-verification"
-                    className="inline-flex items-center text-sm font-semibold text-yellow-800 hover:text-yellow-900 underline"
-                  >
-                    Renvoyer l'email de vérification
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
     </div>
