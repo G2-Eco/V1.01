@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { setCookie, deleteCookie } from '@/lib/cookies';
 import {
@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Check if user is logged in
@@ -32,8 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('accessToken');
     
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      // Ensure cookie is set
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      // Ensure cookie is set for middleware
       setCookie('accessToken', token, 7);
     }
     setLoading(false);
@@ -42,21 +45,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginRequest) => {
     const authResponse = await authApi.login(credentials);
     setUser(authResponse.user);
-    router.push('/dashboard');
+    
+    // Get redirect parameter from URL or default to dashboard
+    const redirect = searchParams.get('redirect') || '/dashboard';
+    router.push(redirect);
   };
 
   const register = async (userData: RegisterRequest) => {
     const authResponse = await authApi.register(userData);
     setUser(authResponse.user);
-    router.push('/dashboard');
+    
+    // Get redirect parameter from URL or default to dashboard
+    const redirect = searchParams.get('redirect') || '/dashboard';
+    router.push(redirect);
   };
 
   const logout = async () => {
     await authApi.logout();
     setUser(null);
     deleteCookie('accessToken');
-    router.push('/login');
+    router.push('/');
   };
+
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
     <AuthContext.Provider
@@ -67,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         isAuthenticated: !!user,
+        isAdmin,
       }}
     >
       {children}

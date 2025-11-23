@@ -1,29 +1,24 @@
 # Use Node 20
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
+# Set working directory
 WORKDIR /app
+
+# Copy package files and install deps
 COPY package*.json ./
 RUN npm install
 
-# Copy source code
+# Copy all source code
 COPY . .
 
-# Disable telemetry for CI/Docker
+# Copy environment file
+COPY .env.local .env.local
+
+# Disable Next.js telemetry in Docker
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Force dynamic rendering pages to skip static prerendering
-RUN npm run build
-
-# --- Production stage ---
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-RUN npm install --no-save typescript @types/node
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/middleware.ts ./
-
+# Expose port for Next.js dev server
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Start development server
+CMD ["npm", "run", "dev"]

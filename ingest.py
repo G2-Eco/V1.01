@@ -22,14 +22,14 @@ conn = mysql.connector.connect(
     host="localhost",
     user="root",
     password="root",
-    database="ecom"
+    database="ecommerce"
 )
 cursor = conn.cursor()
 
 # 6. Insert rows
 insert_query = """
 INSERT INTO products
-(gory_name, category_path, root_category_url, root_category_name, upc, tags, main_image, rating,
+(category_name, category_path, root_category_url, root_category_name, upc, tags, main_image, rating,
  unit_price, unit, aisle, free_returns, sizes, colors, seller, other_attributes,
  customer_reviews, ingredients, initial_price, discount, ingredients_full, categories)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)

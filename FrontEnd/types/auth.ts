@@ -5,6 +5,8 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export type Role = 'CLIENT' | 'ADMIN' | undefined;
+
 // User Types
 export interface UserResponse {
   id: number;
@@ -12,6 +14,7 @@ export interface UserResponse {
   firstName: string;
   lastName: string;
   emailVerified: boolean;
+  role: Role;
   lastLogin: string;
   createdAt: string;
 }

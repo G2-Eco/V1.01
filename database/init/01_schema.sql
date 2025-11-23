@@ -19,7 +19,7 @@
 -- Table structure for table `products`
 --
 
-USE ecommerce;
+USE ecom;
 
 
 DROP TABLE IF EXISTS `products`;

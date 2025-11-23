@@ -21,6 +21,7 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private boolean emailVerified;
+    private String role;
     private Instant lastLogin;
     private LocalDateTime createdAt;
 
@@ -32,6 +33,7 @@ public class UserResponse {
         this.emailVerified = user.isEmailVerified();
         this.lastLogin = user.getLastLogin();
         this.createdAt = user.getCreatedAt();
+        this.role = user.getRole().name();
     }
 }
 
