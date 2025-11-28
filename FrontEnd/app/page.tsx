@@ -3,6 +3,9 @@ import Footer from './components/Footer';
 import HeroBanner from './components/HeroBanner';
 import ProductsClient from './components/ProductsClient';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">

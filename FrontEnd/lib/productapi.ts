@@ -1,6 +1,6 @@
 import { Product } from '@/types/product';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Product API
 export const productApi = {
@@ -11,7 +11,7 @@ export const productApi = {
     if (!response.ok) throw new Error('Failed to fetch products');
     return response.json();
   },
-  
+
   getById: async (id: number): Promise<Product> => {
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       cache: 'no-store'

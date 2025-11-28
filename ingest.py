@@ -22,7 +22,7 @@ conn = mysql.connector.connect(
     host="localhost",
     user="root",
     password="root",
-    database="ecommerce"
+    database="ecom"
 )
 cursor = conn.cursor()
 
