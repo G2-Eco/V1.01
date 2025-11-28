@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { setCookie, deleteCookie } from '@/lib/cookies';
+import { decodeJWT, getRoleFromToken } from '@/lib/jwtUtils';
 import {
   UserResponse,
   LoginRequest,
@@ -30,33 +31,92 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
-    
-    if (storedUser && token) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      // Ensure cookie is set for middleware
-      setCookie('accessToken', token, 7);
+
+    if (token) {
+      // Decode JWT to get role
+      const payload = decodeJWT(token);
+
+      if (payload) {
+        // Get stored user data and update with decoded role
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          // Override role with JWT payload role (source of truth)
+          userData.role = payload.role;
+          setUser(userData);
+        } else {
+          // If no stored user, create minimal user object from JWT
+          setUser({
+            id: 0,
+            email: payload.sub,
+            firstName: '',
+            lastName: '',
+            emailVerified: false,
+            role: payload.role,
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          });
+        }
+
+        // Ensure cookie is set for middleware
+        setCookie('accessToken', token, 7);
+      } else {
+        // Invalid token, clear storage
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      }
     }
+
     setLoading(false);
   }, []);
 
   const login = async (credentials: LoginRequest) => {
     const authResponse = await authApi.login(credentials);
-    setUser(authResponse.user);
-    
+
+    // Decode the JWT to get the role
+    const payload = decodeJWT(authResponse.accessToken);
+    if (payload) {
+      // Update user with role from JWT
+      const userWithRole = {
+        ...authResponse.user,
+        role: payload.role
+      };
+      setUser(userWithRole);
+
+      // Update localStorage with correct role
+      localStorage.setItem('user', JSON.stringify(userWithRole));
+    } else {
+      setUser(authResponse.user);
+    }
+
     // Get redirect parameter from URL or default to dashboard
-    const redirect = searchParams.get('redirect') || '/dashboard';
+    const redirect = searchParams.get('redirect') || '/';
     router.push(redirect);
   };
 
   const register = async (userData: RegisterRequest) => {
     const authResponse = await authApi.register(userData);
-    setUser(authResponse.user);
-    
-    // Get redirect parameter from URL or default to dashboard
-    const redirect = searchParams.get('redirect') || '/dashboard';
+
+    // Decode the JWT to get the role
+    const payload = decodeJWT(authResponse.accessToken);
+    if (payload) {
+      // Update user with role from JWT
+      const userWithRole = {
+        ...authResponse.user,
+        role: payload.role
+      };
+      setUser(userWithRole);
+
+      // Update localStorage with correct role
+      localStorage.setItem('user', JSON.stringify(userWithRole));
+    } else {
+      setUser(authResponse.user);
+    }
+
+    // Get redirect parameter from URL or default to home
+    const redirect = searchParams.get('redirect') || '/';
     router.push(redirect);
   };
 

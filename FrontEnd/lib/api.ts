@@ -7,7 +7,7 @@ import {
   LogoutRequest,
 } from '@/types/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -21,7 +21,7 @@ async function fetchApi<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const token = localStorage.getItem('accessToken');
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -51,17 +51,17 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
-    
+
     // Store tokens in localStorage and cookies
     if (response.data) {
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+
       // Set cookie for middleware
       document.cookie = `accessToken=${response.data.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
     }
-    
+
     return response.data;
   },
 
@@ -70,27 +70,27 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(userData),
     });
-    
+
     // Store tokens
     if (response.data) {
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
+
     return response.data;
   },
 
   logout: async (): Promise<void> => {
     const refreshToken = localStorage.getItem('refreshToken');
-    
+
     if (refreshToken) {
       await fetchApi<void>('/auth/logout', {
         method: 'POST',
         body: JSON.stringify({ refreshToken }),
       });
     }
-    
+
     // Clear tokens
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -99,7 +99,7 @@ export const authApi = {
 
   refreshToken: async (): Promise<AuthResponse> => {
     const refreshToken = localStorage.getItem('refreshToken');
-    
+
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -108,13 +108,13 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });
-    
+
     // Update tokens
     if (response.data) {
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
     }
-    
+
     return response.data;
   },
 

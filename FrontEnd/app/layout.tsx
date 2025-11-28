@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
@@ -20,13 +21,15 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <AuthProvider>
-          <CartProvider>
-            <FavoritesProvider>
-              {children}
-            </FavoritesProvider>
-          </CartProvider>
-        </AuthProvider>
+        <Suspense fallback={null}>
+          <AuthProvider>
+            <CartProvider>
+              <FavoritesProvider>
+                {children}
+              </FavoritesProvider>
+            </CartProvider>
+          </AuthProvider>
+        </Suspense>
       </body>
     </html>
   );

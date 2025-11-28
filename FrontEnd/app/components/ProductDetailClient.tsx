@@ -18,27 +18,45 @@ interface Review {
 }
 
 export default function ProductDetailClient({ initialProduct }: ProductDetailClientProps) {
+  // Safety check for product data
+  if (!initialProduct) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-8">
+          <h2 className="text-2xl font-bold text-red-900 mb-2">Product Not Found</h2>
+          <p className="text-red-700 mb-6">The product you're looking for doesn't exist or has been removed.</p>
+          <a
+            href="/"
+            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+          >
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  
+
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const product = initialProduct;
-  
+
   const colors = safeParseJSON<string[]>(product.colors, []);
   const sizes = safeParseJSON<string[]>(product.sizes, []);
   const categories = safeParseJSON<string[]>(product.categories, []);
   const reviews = safeParseJSON<Review[]>(product.customerReviews, []);
-  const attributes = safeParseJSON<Array<{name: string, value: string}>>(product.otherAttributes, []);
-  
+  const attributes = safeParseJSON<Array<{ name: string, value: string }>>(product.otherAttributes, []);
+
   const imageUrl = cleanImageUrl(product.mainImage);
   const isProductFavorite = isFavorite(product.id);
 
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : product.rating || 0;
 
   const handleAddToCart = () => {
@@ -91,7 +109,7 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-slate-900 mb-2">{product.itemName}</h1>
-              
+
               {/* Rating */}
               {averageRating > 0 && (
                 <div className="flex items-center space-x-2 mb-4">
@@ -99,13 +117,12 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                     {[1, 2, 3, 4, 5].map((star) => (
                       <svg
                         key={star}
-                        className={`w-5 h-5 ${
-                          star <= Math.floor(averageRating)
+                        className={`w-5 h-5 ${star <= Math.floor(averageRating)
                             ? 'text-amber-400 fill-amber-400'
                             : star === Math.ceil(averageRating) && averageRating % 1 > 0
-                            ? 'text-amber-400'
-                            : 'text-slate-300'
-                        }`}
+                              ? 'text-amber-400'
+                              : 'text-slate-300'
+                          }`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -119,16 +136,16 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                 </div>
               )}
             </div>
-            
+
             {/* Favorite Button */}
             <button
               onClick={() => toggleFavorite(product.id)}
               className="p-3 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors ml-4"
             >
-              <svg 
+              <svg
                 className={`w-6 h-6 ${isProductFavorite ? 'fill-red-500 text-red-500' : 'text-slate-400'}`}
-                fill="none" 
-                stroke="currentColor" 
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -152,11 +169,10 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                   <button
                     key={idx}
                     onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded-lg transition-all ${
-                      selectedColor === color
+                    className={`px-4 py-2 border rounded-lg transition-all ${selectedColor === color
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
                         : 'border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     {color}
                   </button>
@@ -174,11 +190,10 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                   <button
                     key={idx}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border rounded-lg transition-all ${
-                      selectedSize === size
+                    className={`px-4 py-2 border rounded-lg transition-all ${selectedSize === size
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
                         : 'border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>
@@ -265,9 +280,8 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                       {[...Array(5)].map((_, i) => (
                         <svg
                           key={i}
-                          className={`w-5 h-5 ${
-                            i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-300'
-                          }`}
+                          className={`w-5 h-5 ${i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-300'
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
