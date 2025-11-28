@@ -1,6 +1,7 @@
 package com.ecommerce.backend.security;
 
 import com.ecommerce.backend.config.JwtConfig;
+import com.ecommerce.backend.model.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -27,11 +28,12 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String email) {
+    public String generateAccessToken(User user) {
         Date expiryDate = new Date(System.currentTimeMillis() + jwtConfig.getAccessTokenExpiration());
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(user.getEmail())
+                .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -61,5 +63,13 @@ public class JwtTokenProvider {
             logger.error("JWT claims string is empty: {}", ex.getMessage());
         }
         return false;
+    }
+
+    // NEW: extract role
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build()
+                .parseClaimsJws(token).getBody();
+
+        return claims.get("role", String.class);
     }
 }
