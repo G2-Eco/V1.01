@@ -1,104 +1,31 @@
 ---
 apiVersion: v1
-kind: Namespace
+kind: PersistentVolumeClaim
 metadata:
-  name: app
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backend
-  namespace: app
+  name: mysql-pvc
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: backend
-  template:
-    metadata:
-      labels:
-        app: backend
-    spec:
-      containers:
-      - name: backend
-        image: amvdown/backend:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 10
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-svc
-  namespace: app
+  name: mysql
 spec:
-  selector:
-    app: backend
   ports:
-  - protocol: TCP
-    port: 8080
-    targetPort: 8080
-  type: ClusterIP
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-  namespace: app
-spec:
-  replicas: 1
+    - port: 3306
+      targetPort: 3306
   selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-      - name: frontend
-        image: amvdown/frontend:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 80
-        # Example env to point to backend service
-        env:
-        - name: BACKEND_URL
-          value: "http://backend-svc:8080"
-
+    app: mysql
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-svc
-  namespace: app
-spec:
-  selector:
-    app: frontend
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-    nodePort: 30080
-  type: NodePort
-
----
-# Simple MySQL/Postgres example: use MySQL here
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
-  namespace: app
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: mysql
@@ -108,34 +35,115 @@ spec:
         app: mysql
     spec:
       containers:
-      - name: mysql
-        image: mysql:8
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "examplepassword"
-        - name: MYSQL_DATABASE
-          value: "appdb"
-        ports:
-        - containerPort: 3306
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
+        - name: mysql
+          image: amvdown/ecom-database:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root"
+            - name: MYSQL_DATABASE
+              value: "ecom"
+            - name: MYSQL_USER
+              value: "user"
+            - name: MYSQL_PASSWORD
+              value: "password"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          # Kubernetes health checks
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
-      - name: mysql-data
-        hostPath:
-          path: /data/mysql
-          type: DirectoryOrCreate
-
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-svc
-  namespace: app
+  name: backend
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
 spec:
   selector:
-    app: mysql
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: amvdown/ecom-backend:latest
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
   ports:
-  - port: 3306
-    targetPort: 3306
-  type: ClusterIP
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: frontend
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: amvdown/ecom-frontend:latest
+          env:
+            - name: NEXT_PUBLIC_API_BASE_URL
+              value: "http://localhost:8080/api/v1"
+            - name: API_BASE_URL
+              value: "http://backend:8080/api/v1"
+          ports:
+            - containerPort: 3000
