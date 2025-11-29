@@ -24,19 +24,19 @@ export default function ProductGrid({ initialProducts }: ProductGridProps) {
     }).filter(Boolean)
   )].slice(0, 10); // Limit to 10 categories
 
-  const filteredProducts = selectedCategory === 'All' 
-    ? products 
+  const filteredProducts = selectedCategory === 'All'
+    ? products
     : products.filter(product => {
-        try {
-          const productCategories = JSON.parse(product.categories.replace(/^"|"$/g, ''));
-          return Array.isArray(productCategories) && productCategories.includes(selectedCategory);
-        } catch {
-          return false;
-        }
-      });
+      try {
+        const productCategories = JSON.parse(product.categories.replace(/^"|"$/g, ''));
+        return Array.isArray(productCategories) && productCategories.includes(selectedCategory);
+      } catch {
+        return false;
+      }
+    });
 
   return (
-    <div>
+    <div id="products">
       {/* Categories */}
       {categories.length > 1 && (
         <div className="flex flex-wrap gap-2 mb-8">
@@ -44,11 +44,10 @@ export default function ProductGrid({ initialProducts }: ProductGridProps) {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
-                selectedCategory === category
+              className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${selectedCategory === category
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
                   : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-              }`}
+                }`}
             >
               {category}
             </button>

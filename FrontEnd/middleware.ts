@@ -7,16 +7,16 @@ export function middleware(request: NextRequest) {
 
   // Define public routes (accessible without authentication)
   const publicRoutes = ['/login', '/register', '/verify-email', '/resend-verification', '/forgot-password'];
-  
+
   // Define protected routes (require authentication)
-  const protectedRoutes = ['/dashboard', '/profile', '/settings', '/orders', '/products', '/wishlist', '/checkout'];
+  const protectedRoutes = ['/dashboard', '/profile', '/settings', '/orders', '/products', '/wishlist', '/checkout', '/productmanager'];
 
   // Admin only routes
-  const adminRoutes = ['/dashboard'];
+  const adminRoutes = ['/dashboard', '/productmanager'];
 
   // Check if current path is a public route
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  
+
   // Check if current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
@@ -25,11 +25,24 @@ export function middleware(request: NextRequest) {
 
   // Get token from cookie
   const token = request.cookies.get('accessToken')?.value;
-  
-  // Get user data from cookie (we'll need to set this from the client)
-  const userCookie = request.cookies.get('user')?.value;
-  const user = userCookie ? JSON.parse(userCookie) : null;
-  const isAdmin = user?.role === 'ADMIN';
+
+  // Decode JWT to extract role (server side)
+  const getRoleFromToken = (jwt: string | undefined): string | null => {
+    if (!jwt) return null;
+    try {
+      const payload = jwt.split('.')[1];
+      // Convert base64url to base64
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+      const decoded = atob(padded);
+      const parsed = JSON.parse(decoded);
+      return parsed.role || null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const role = getRoleFromToken(token);
+  const isAdmin = role === 'ADMIN';
 
   // If user is authenticated and trying to access public routes (login/register)
   // Redirect to dashboard

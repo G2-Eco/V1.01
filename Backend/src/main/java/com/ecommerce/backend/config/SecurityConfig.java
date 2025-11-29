@@ -65,20 +65,7 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()   // Disable auth
-//                )
-//                .sessionManagement(session -> session.disable())
-//                .securityContext(context -> context.disable());
-//
-//        return http.build();
-//    }
-
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -86,18 +73,20 @@ public class SecurityConfig {
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
-                        auth ->
-                                auth.requestMatchers("/api/v1/auth/**").permitAll()
-                                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                                        .requestMatchers("/api/v1/products/**").hasRole("ADMIN")
-                                        .anyRequest().authenticated());
+                        auth -> auth
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                                .requestMatchers("/api/v1/products/**").hasRole("ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+                );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

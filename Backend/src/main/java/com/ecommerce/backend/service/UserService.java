@@ -26,6 +26,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
     public User updateUser(Long id, AdminUpdateUserRequest dto) {
         User existing = findById(id);
 
@@ -44,6 +49,22 @@ public class UserService {
         // Password update (always hash before saving)
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        if (dto.getRole() != null && !dto.getRole().isBlank()) {
+            try {
+                existing.setRole(com.ecommerce.backend.model.enums.Role.valueOf(dto.getRole()));
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid role or throw exception
+            }
+        }
+
+        if (dto.getEnabled() != null) {
+            existing.setEnabled(dto.getEnabled());
+        }
+
+        if (dto.getLocked() != null) {
+            existing.setAccountNonLocked(!dto.getLocked());
         }
 
         return userRepository.save(existing);

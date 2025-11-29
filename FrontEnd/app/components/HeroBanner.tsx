@@ -19,13 +19,13 @@ export default function HeroBanner() {
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <a
-              href="/products"
+              href="#products"
               className="px-6 py-3 bg-white text-indigo-600 rounded-full font-semibold hover:bg-slate-100 transition-all shadow-xl"
             >
               Shop Now
             </a>
             <a
-              href="/categories"
+              href="/categories/Home"
               className="px-6 py-3 bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-full font-semibold hover:bg-white/20 transition-all"
             >
               View Collections

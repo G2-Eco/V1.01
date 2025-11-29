@@ -37,8 +37,8 @@ export default function Header() {
               <div className="flex items-center space-x-4">
                 {/* Admin Link */}
                 {isAdmin && (
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="text-sm text-slate-600 hover:text-slate-800 transition-colors font-medium"
                   >
                     Dashboard
@@ -64,7 +64,7 @@ export default function Header() {
 
                   {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-2 z-50">
-                      <div className="px-4 py-2 text-sm text-slate-600 border-b border-slate-100">
+                      <div className="px-4 py-2 text-sm text-slate-600 truncate border-b border-slate-100">
                         Signed in as<br />
                         <strong>{user.email}</strong>
                       </div>
@@ -76,12 +76,6 @@ export default function Header() {
                           Admin Dashboard
                         </Link>
                       )}
-                      <Link
-                        href="/orders"
-                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                      >
-                        My Orders
-                      </Link>
                       <Link
                         href="/profile"
                         className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"

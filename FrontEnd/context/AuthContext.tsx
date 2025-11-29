@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  token: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is logged in
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
-    
+
     if (storedUser && token) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginRequest) => {
     const authResponse = await authApi.login(credentials);
     setUser(authResponse.user);
-    
+
     // Get redirect parameter from URL or default to dashboard
     const redirect = searchParams.get('redirect') || '/dashboard';
     router.push(redirect);
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (userData: RegisterRequest) => {
     const authResponse = await authApi.register(userData);
     setUser(authResponse.user);
-    
+
     // Get redirect parameter from URL or default to dashboard
     const redirect = searchParams.get('redirect') || '/dashboard';
     router.push(redirect);
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         isAuthenticated: !!user,
         isAdmin,
+        token: typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null,
       }}
     >
       {children}

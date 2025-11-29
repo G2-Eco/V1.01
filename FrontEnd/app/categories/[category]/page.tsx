@@ -11,13 +11,15 @@ interface CategoryPageProps {
   }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
   // Await the params promise
   const { category } = await params;
-  
+
   let products: Product[] = [];
   const categoryName = decodeURIComponent(category);
-  
+
   try {
     products = await productApi.getAll();
   } catch (error) {
@@ -41,7 +43,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
       <Header />
-      <CategoryClient 
+      <CategoryClient
         categoryName={categoryName}
         initialProducts={categoryProducts}
         allProducts={products}
@@ -55,7 +57,7 @@ export async function generateMetadata({ params }: CategoryPageProps) {
   // Await the params promise
   const { category } = await params;
   const categoryName = decodeURIComponent(category);
-  
+
   return {
     title: `${categoryName} - ShopHub`,
     description: `Browse our collection of ${categoryName} products at ShopHub. Find the best quality ${categoryName.toLowerCase()} items with fast shipping.`,
