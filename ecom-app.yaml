@@ -37,6 +37,7 @@ spec:
       containers:
         - name: mysql
           image: amvdown/ecom-database:latest
+          imagePullPolicy: Always
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: "root"
@@ -102,6 +103,7 @@ spec:
       containers:
         - name: backend
           image: amvdown/ecom-backend:latest
+          imagePullPolicy: Always
           env:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true"
@@ -148,6 +150,7 @@ spec:
       containers:
         - name: frontend
           image: amvdown/ecom-frontend:latest
+          imagePullPolicy: Always
           env:
             - name: NEXT_PUBLIC_API_BASE_URL
               value: "http://localhost:8080/api/v1"
