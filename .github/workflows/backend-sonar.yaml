@@ -41,4 +41,4 @@ jobs:
             -Dsonar.projectKey=G2-Eco_V1.01
             -Dsonar.organization=g2-eco
             -Dsonar.projectBaseDir=Backend
-            -Dsonar.java.binaries=Backend/target/classes
+            -Dsonar.java.binaries=target/classes
