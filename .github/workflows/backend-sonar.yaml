@@ -35,4 +35,4 @@ jobs:
           args: >
             -Dsonar.projectKey=G2-Eco_V1.01
             -Dsonar.organization=g2-eco
-            -Dsonar.projectBaseDir=backend
+            -Dsonar.projectBaseDir=Backend
