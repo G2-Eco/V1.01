@@ -33,6 +33,6 @@ jobs:
         with:
           token: ${{ secrets.SONAR_TOKEN }}
           args: >
-            -Dsonar.projectKey=ecom-backend
+            -Dsonar.projectKey=G2-Eco_V1.01
             -Dsonar.organization=g2-eco
             -Dsonar.projectBaseDir=backend
