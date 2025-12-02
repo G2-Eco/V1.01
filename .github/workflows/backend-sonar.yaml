@@ -35,7 +35,7 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.ECOS }}
         with:
           args: >
             -Dsonar.projectKey=G2-Eco_V1.01
