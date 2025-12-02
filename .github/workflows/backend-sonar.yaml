@@ -30,7 +30,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Build backend (Maven)
-        run: mvn -f Backend/pom.xml clean verify -DskipTests
+        run: mvn -f V1.01/Backend/pom.xml clean verify -DskipTests
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -40,5 +40,5 @@ jobs:
           args: >
             -Dsonar.projectKey=G2-Eco_V1.01
             -Dsonar.organization=g2-eco
-            -Dsonar.projectBaseDir=Backend
-            -Dsonar.java.binaries=Backend/target/classes
+            -Dsonar.projectBaseDir=V1.01/Backend
+            -Dsonar.java.binaries=V1.01/Backend/target/classes
