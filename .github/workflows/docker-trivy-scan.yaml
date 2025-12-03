@@ -13,29 +13,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Clone repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2) Install Trivy manually (méthode officielle recommandée)
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      # 3) Build Docker image
       - name: Build backend Docker image
         run: |
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # ---------------------------------------------------------
-      # Installer Trivy (OBLIGATOIRE sinon "command not found")
-      # ---------------------------------------------------------
-      - name: Install Trivy
-        uses: aquasecurity/trivy-action@0.20.0
-        with:
-          command: version
-
-      # ---------------------------------------------------------
-      # Scan 1 : Full Scan (HTML report)
-      # ---------------------------------------------------------
-      - name: Full Trivy Image Scan (HTML report)
+      # 4) Full HTML report (LOW → CRITICAL)
+      - name: Full Trivy HTML report
         run: |
           trivy image \
             --scanners vuln,misconfig \
-            --severity LOW,MEDIUM,HIGH,CRITICAL \
+            --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
             --format template \
             --template "@/contrib/html.tpl" \
             --output trivy-report.html \
@@ -46,11 +48,10 @@ jobs:
         with:
           name: trivy-docker-report
           path: trivy-report.html
+          if-no-files-found: warn
 
-      # ---------------------------------------------------------
-      # Scan 2 : Fail only on HIGH/CRITICAL
-      # ---------------------------------------------------------
-      - name: Enforce security (High/Critical only)
+      # 5) FAIL ONLY IF HIGH or CRITICAL
+      - name: Fail pipeline if HIGH/CRITICAL exist
         run: |
           trivy image \
             --severity HIGH,CRITICAL \
