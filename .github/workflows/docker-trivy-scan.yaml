@@ -21,18 +21,25 @@ jobs:
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
       # ---------------------------------------------------------
-      # Scan 1 : Rapport complet (LOW + MEDIUM + HIGH + CRITICAL)
-      # NE DOIT PAS ÉCHOUER
+      # Installer Trivy (OBLIGATOIRE sinon "command not found")
+      # ---------------------------------------------------------
+      - name: Install Trivy
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          command: version
+
+      # ---------------------------------------------------------
+      # Scan 1 : Full Scan (HTML report)
       # ---------------------------------------------------------
       - name: Full Trivy Image Scan (HTML report)
         run: |
           trivy image \
+            --scanners vuln,misconfig \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
             --format template \
             --template "@/contrib/html.tpl" \
             --output trivy-report.html \
-            --scanners vuln,misconfig \
-            --severity LOW,MEDIUM,HIGH,CRITICAL \
-            backend-app:latest || true   # NE PAS ÉCHOUER
+            backend-app:latest || true
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -41,8 +48,7 @@ jobs:
           path: trivy-report.html
 
       # ---------------------------------------------------------
-      # Scan 2 : Only HIGH/CRITICAL → Fail if found
-      # Pipeline must FAIL if HIGH/CRITICAL are detected
+      # Scan 2 : Fail only on HIGH/CRITICAL
       # ---------------------------------------------------------
       - name: Enforce security (High/Critical only)
         run: |
@@ -51,4 +57,3 @@ jobs:
             --exit-code 1 \
             --ignore-unfixed=false \
             backend-app:latest
-
