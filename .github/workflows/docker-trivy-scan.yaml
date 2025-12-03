@@ -14,14 +14,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Étape 1 : Construire l’image Docker du backend
+      # Étape 1 : Construire l’image Docker
       - name: Build backend Docker image
         run: |
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # Étape 2 : Scanner l'image et générer un rapport HTML
+      # Étape 2 : Exécuter Trivy + générer rapport HTML
       - name: Run Trivy scan (HTML report)
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -30,12 +30,12 @@ jobs:
           format: template
           template: "@/contrib/html.tpl"
           output: trivy-report.html
-          exit-code: 0             # Ne pas échouer le job (optionnel)
-          severity: HIGH,CRITICAL  # Tu peux mettre: LOW,MEDIUM,HIGH,CRITICAL
+          exit-code: 0
+          severity: HIGH,CRITICAL
 
-      # Étape 3 : Upload du rapport HTML comme artefact GitHub
+      # Étape 3 : Upload HTML report (nouvelle version v4)
       - name: Upload Trivy HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report
           path: trivy-report.html
