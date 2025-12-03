@@ -16,26 +16,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Étape 1 : Construire l’image Docker
       - name: Build backend Docker image
         run: |
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # Étape 2 : Exécuter Trivy + générer rapport HTML
-      - name: Run Trivy scan (HTML report)
-        uses: aquasecurity/trivy-action@0.20.0
-        with:
-          scan-type: image
-          image-ref: backend-app:latest
-          format: template
-          template: "@/contrib/html.tpl"
-          output: trivy-report.html
-          exit-code: 0
-          severity: HIGH,CRITICAL
+      # ---------------------------------------------------------
+      # Scan 1 : Rapport complet (LOW + MEDIUM + HIGH + CRITICAL)
+      # NE DOIT PAS ÉCHOUER
+      # ---------------------------------------------------------
+      - name: Full Trivy Image Scan (HTML report)
+        run: |
+          trivy image \
+            --format template \
+            --template "@/contrib/html.tpl" \
+            --output trivy-report.html \
+            --scanners vuln,misconfig \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
+            backend-app:latest || true   # NE PAS ÉCHOUER
 
-      # Étape 3 : Upload HTML report (nouvelle version v4)
-      - name: Upload Trivy HTML report
+      - name: Upload HTML report
         uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report
           path: trivy-report.html
+
+      # ---------------------------------------------------------
+      # Scan 2 : Only HIGH/CRITICAL → Fail if found
+      # Pipeline must FAIL if HIGH/CRITICAL are detected
+      # ---------------------------------------------------------
+      - name: Enforce security (High/Critical only)
+        run: |
+          trivy image \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            --ignore-unfixed=false \
+            backend-app:latest
+
