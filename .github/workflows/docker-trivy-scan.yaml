@@ -1,71 +1,34 @@
-name: Docker Image Scan (Trivy)
+name: Trivy Docker Scan
 
 on:
   push:
-    branches: [ v2devsecops ]
+    branches:
+      - v2devsecops
   pull_request:
-    branches: [ v2devsecops ]
+    branches:
+      - v2devsecops
 
 jobs:
   trivy-scan:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------------------
-      # 1) INSTALL TRIVY (script officiel)
-      # --------------------------------------------------------------------
-      - name: Install Trivy
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sudo sh -s -- -b /usr/local/bin
-
-      # --------------------------------------------------------------------
-      # 2) DOWNLOAD HTML TEMPLATE
-      # --------------------------------------------------------------------
-      - name: Download Trivy HTML template
-        run: |
-          mkdir -p trivy-template
-          curl -sSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl \
-            -o trivy-template/html.tpl
-
-      # --------------------------------------------------------------------
-      # 3) BUILD IMAGE
-      # --------------------------------------------------------------------
+      # 2. Build Docker image
       - name: Build backend Docker image
         run: |
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # --------------------------------------------------------------------
-      # 4) GENERATE FULL HTML REPORT (n'affecte pas la pipeline)
-      # --------------------------------------------------------------------
-      - name: Generate Trivy HTML report
-        run: |
-          trivy image \
-            --scanners vuln,misconfig \
-            --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
-            --format template \
-            --template trivy-template/html.tpl \
-            --output trivy-report.html \
-            backend-app:latest || true
-
-      - name: Upload Trivy HTML Report
-        uses: actions/upload-artifact@v4
+      # 3. Run Trivy scan (ECHOUER si HIGH ou CRITICAL)
+      - name: Scan Docker image with Trivy (fail on HIGH or CRITICAL)
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          name: trivy-docker-report
-          path: trivy-report.html
-
-      # --------------------------------------------------------------------
-      # 5) FAIL ONLY IF HIGH/CRITICAL
-      # --------------------------------------------------------------------
-      - name: Fail build on HIGH/CRITICAL
-        run: |
-          trivy image \
-            --severity HIGH,CRITICAL \
-            --exit-code 1 \
-            --ignore-unfixed=false \
-            backend-app:latest
+          scan-type: image
+          image-ref: backend-app:latest
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: 1
+          format: table
