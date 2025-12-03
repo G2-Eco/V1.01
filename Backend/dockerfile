@@ -13,6 +13,14 @@ RUN mvn clean package -DskipTests
 # --- Runtime stage ---
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+
+# ▼▼ VULNÉRABILITÉS VOLONTAIRES POUR TEST TRIVY ▼▼
+RUN apt-get update && apt-get install -y \
+    wget=1.20.3-1ubuntu1 \
+    curl=7.58.0-2ubuntu3.12 \
+    libssl1.0.0 || true
+# ▲▲ Elles contiennent toutes des CVEs HIGH/CRITICAL ▲▲
+
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
