@@ -1,0 +1,32 @@
+name: Docker Image Scan (Trivy)
+
+on:
+  push:
+    branches:
+      - v2devsecops
+  pull_request:
+    branches:
+      - v2devsecops
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Étape 1 : Build de l’image Docker du backend
+      - name: Build backend Docker image
+        run: |
+          docker build -t backend-app:latest -f Backend/dockerfile Backend
+
+      # Étape 2 : Scanner avec Trivy
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          image-ref: backend-app:latest
+          format: table
+          ignore-unfixed: false
+          exit-code: 1
