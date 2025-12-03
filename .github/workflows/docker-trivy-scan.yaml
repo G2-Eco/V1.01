@@ -13,26 +13,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Clone repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2) Install Trivy manually (méthode officielle recommandée)
-      - name: Install Trivy
+      # 1) Installer Trivy (méthode officielle via script)
+      - name: Install Trivy via script
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget apt-transport-https gnupg
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+          sudo apt-get install -y curl
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 
-      # 3) Build Docker image
+      # 2) Build Docker image
       - name: Build backend Docker image
-        run: |
-          docker build -t backend-app:latest -f Backend/dockerfile Backend
+        run: docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # 4) Full HTML report (LOW → CRITICAL)
+      # 3) FULL HTML REPORT (LOW → CRITICAL)
       - name: Full Trivy HTML report
         run: |
           trivy image \
@@ -43,15 +38,14 @@ jobs:
             --output trivy-report.html \
             backend-app:latest || true
 
-      - name: Upload HTML report
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: trivy-docker-report
           path: trivy-report.html
-          if-no-files-found: warn
 
-      # 5) FAIL ONLY IF HIGH or CRITICAL
-      - name: Fail pipeline if HIGH/CRITICAL exist
+      # 4) FAIL ONLY if HIGH or CRITICAL exist
+      - name: Fail build on HIGH/CRITICAL
         run: |
           trivy image \
             --severity HIGH,CRITICAL \
