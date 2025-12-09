@@ -3,10 +3,10 @@ name: Trivy Docker Scan
 on:
   push:
     branches:
-      - v2devsecops
+      - main
   pull_request:
     branches:
-      - v2devsecops
+      - main
 
 jobs:
   trivy-scan:
