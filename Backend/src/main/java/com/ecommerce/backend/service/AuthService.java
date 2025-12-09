@@ -79,7 +79,7 @@ public class AuthService {
             user.setLastLogin(Instant.now());
             userRepository.save(user);
 
-            String accessToken = tokenService.generateAccessToken(user.getEmail());
+            String accessToken = tokenService.generateAccessToken(user);
             RefreshToken refreshToken = tokenService.createRefreshToken(user);
 
             logger.info("User {} logged in successfully", user.getEmail());
@@ -123,7 +123,7 @@ public class AuthService {
         }
 
         // Generate tokens
-        String accessToken = tokenService.generateAccessToken(savedUser.getEmail());
+        String accessToken = tokenService.generateAccessToken(savedUser);
         RefreshToken refreshToken = tokenService.createRefreshToken(savedUser);
 
         logger.info("New user registered with email: {}", savedUser.getEmail());
@@ -140,7 +140,7 @@ public class AuthService {
                 .map(RefreshToken::getUser)
                 .map(
                         user -> {
-                            String accessToken = tokenService.generateAccessToken(user.getEmail());
+                            String accessToken = tokenService.generateAccessToken(user);
                             return new AuthResponse(
                                     accessToken, request.getRefreshToken(), new UserResponse(user));
                         })

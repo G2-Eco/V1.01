@@ -56,7 +56,7 @@ CREATE TABLE `refresh_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKghpmfn23vmxfu3spu3lfg4r2d` (`token`),
   KEY `FK1lih5y2npsf8u5o3vhdb9y0os` (`user_id`),
-  CONSTRAINT `FK1lih5y2npsf8u5o3vhdb9y0os` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+  CONSTRAINT `FK1lih5y2npsf8u5o3vhdb9y0os` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

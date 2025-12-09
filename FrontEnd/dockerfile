@@ -1,24 +1,46 @@
-# Use Node 20
-FROM node:20-alpine
+# Production Dockerfile for Next.js Frontend
+FROM node:20-alpine AS base
 
-# Set working directory
+# Install dependencies only when needed
+FROM base AS deps
 WORKDIR /app
 
-# Copy package files and install deps
+# Copy package files
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy all source code
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Copy environment file
-COPY .env.local .env.local
+# Build the Next.js application
+# Environment variables will be provided at runtime via docker-compose
+RUN npm run build
 
-# Disable Next.js telemetry in Docker
+# Production image, copy all files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Expose port for Next.js dev server
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built application
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
 EXPOSE 3000
 
-# Start development server
-CMD ["npm", "run", "dev"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Start the application
+CMD ["node", "server.js"]

@@ -3,9 +3,11 @@ import Footer from './components/Footer';
 import HeroBanner from './components/HeroBanner';
 import ProductsClient from './components/ProductsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
+    <div className="min-h-screen scroll-smooth bg-gradient-to-br from-slate-50 via-white to-purple-50">
       <Header />
       <HeroBanner />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

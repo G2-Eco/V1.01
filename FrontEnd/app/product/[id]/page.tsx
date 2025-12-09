@@ -11,11 +11,14 @@ interface ProductPageProps {
   }>;
 }
 
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
 export default async function ProductPage({ params }: ProductPageProps) {
   // Await the params promise
   const { id } = await params;
   let product = null;
-  
+
   try {
     product = await productApi.getById(parseInt(id));
   } catch (error) {
@@ -37,7 +40,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 export async function generateMetadata({ params }: ProductPageProps) {
   // Await the params promise
   const { id } = await params;
-  
+
   try {
     const product = await productApi.getById(parseInt(id));
     return {

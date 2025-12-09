@@ -1,0 +1,34 @@
+name: Trivy Docker Scan
+
+on:
+  push:
+    branches:
+      - v2devsecops
+  pull_request:
+    branches:
+      - v2devsecops
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Build Docker image
+      - name: Build backend Docker image
+        run: |
+          docker build -t backend-app:latest -f Backend/dockerfile Backend
+
+      # 3. Run Trivy scan (ECHOUER si HIGH ou CRITICAL)
+      - name: Scan Docker image with Trivy (fail on HIGH or CRITICAL)
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: image
+          image-ref: backend-app:latest
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: 1
+          format: table

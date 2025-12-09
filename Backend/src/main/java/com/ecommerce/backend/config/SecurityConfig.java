@@ -7,6 +7,7 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -66,36 +67,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()   // Disable auth
-                )
-                .sessionManagement(session -> session.disable())
-                .securityContext(context -> context.disable());
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        auth -> auth
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                                .requestMatchers("/api/v1/products/**").hasRole("ADMIN")
+                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+                );
+
+        http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-//                .sessionManagement(
-//                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(
-//                        auth ->
-//                                auth.requestMatchers("/api/v1/auth/**")
-//                                        .permitAll()
-//                                        .anyRequest()
-//                                        .authenticated());
-//
-//        http.authenticationProvider(authenticationProvider());
-//        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

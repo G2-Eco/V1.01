@@ -33,8 +33,8 @@ public class TokenService {
         this.jwtConfig = jwtConfig;
     }
 
-    public String generateAccessToken(String email) {
-        return jwtTokenProvider.generateAccessToken(email);
+    public String generateAccessToken(User user) {
+        return jwtTokenProvider.generateAccessToken(user);
     }
 
     public RefreshToken createRefreshToken(User user) {

@@ -1,4 +1,4 @@
-'use client';
+
 export const dynamic = 'force-dynamic'; // prevent prerender
 
 import NotFoundContent from './NotFoundContent';
