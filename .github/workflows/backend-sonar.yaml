@@ -3,10 +3,10 @@ name: Backend SonarCloud Analysis
 on:
   push:
     branches:
-      - v2devsecops
+      - main
   pull_request:
     branches:
-      - v2devsecops
+      - main
 
 jobs:
   sonar:
