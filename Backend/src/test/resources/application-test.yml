@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: false
+  sql:
+    init:
+      mode: never
+
+  # Désactiver la sécurité OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          enabled: false
+      resourceserver:
+        jwt:
+          enabled: false
+
+# Désactiver la validation JWT
+jwt:
+  secret: test-secret-key-for-testing-only-1234567890
+  expiration: 86400000
+
+# Activer des logs spécifiques pour le débogage
+logging:
+  level:
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    com.ecommerce.backend: DEBUG
