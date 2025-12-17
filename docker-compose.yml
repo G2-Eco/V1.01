@@ -1,12 +1,7 @@
 services:
   mysql:
-    # 1. New: Specify the target image name for Docker Hub
-    image: amvdown/ecom-mysql:latest 
-    # 2. New: Use the build context for the custom image
-    build: 
-      context: ./database/init/ 
-      dockerfile: Dockerfile
-    container_name: mysql
+    image: mysql:8.0
+    container_name: ecommerce-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -16,41 +11,89 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      # 3. Modified: Removed the init volume, keeping only the data volume
-      - mysql_data:/var/lib/mysql 
+      - mysql_data:/var/lib/mysql
+      - ./walmart-products.csv:/data/walmart-products.csv:ro
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uuser", "-ppassword"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
 
-  backend:
-    # New: Specify the target image name for Docker Hub
-    image: amvdown/ecom-backend:latest
-    build: ./Backend
-    container_name: backend
+  flyway:
+    build: 
+      context: ./database/flyway
+      dockerfile: Dockerfile
+    container_name: ecommerce-flyway
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true
+      FLYWAY_URL: jdbc:mysql://mysql:3306/ecom?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+      FLYWAY_USER: user
+      FLYWAY_PASSWORD: password
+      CSV_PATH: /data/walmart-products.csv
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ecom
+      DB_USER: user
+      DB_PASSWORD: password
+    volumes:
+      - ./database/migrations:/flyway/sql:ro
+      - ./walmart-products.csv:/data/walmart-products.csv:ro
+
+  backend:
+    build: ./Backend
+    container_name: ecommerce-backend
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_PROPERTIES_HIBERNATE_VALIDATE: false
+      SPRING_JPA_SHOW_SQL: true
+      # Pour Spring Boot
+      SERVER_PORT: 8080
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
     ports:
-      - "8080:8080"
+      - "8088:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Spring Boot peut être lent au démarrage
 
   frontend:
-    # New: Specify the target image name for Docker Hub
-    image: amvdown/ecom-frontend:latest
     build: ./FrontEnd
-    container_name: frontend
+    container_name: ecommerce-frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:8080/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:8088/api/v1  # Utiliser localhost pour le browser
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: 1
+    # Pour Next.js standalone
+    command: ["node", "server.js"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   mysql_data:
