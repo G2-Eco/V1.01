@@ -1,10 +1,10 @@
 services:
   mysql:
     # 1. New: Specify the target image name for Docker Hub
-    image: amvdown/ecom-mysql:latest 
+    image: amvdown/ecom-mysql:latest
     # 2. New: Use the build context for the custom image
     build: 
-      context: ./database/init/ 
+      context: ./database/init/
       dockerfile: Dockerfile
     container_name: mysql
     restart: always
