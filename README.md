@@ -47,6 +47,7 @@ sudo terraform plan
 
 # 6. Apply the configuration to deploy services
 sudo terraform apply -auto-approve
+```
 
 
 
