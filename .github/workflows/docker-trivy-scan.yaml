@@ -24,7 +24,7 @@ jobs:
 
       # 3. Run Trivy scan (ECHOUER si HIGH ou CRITICAL)
       - name: Scan Docker image with Trivy (fail on HIGH or CRITICAL)
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: backend-app:latest
