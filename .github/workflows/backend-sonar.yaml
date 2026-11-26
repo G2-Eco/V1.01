@@ -32,13 +32,13 @@ jobs:
       - name: Build backend (Maven)
         run: mvn -f Backend/pom.xml clean verify -DskipTests
 
-      - name: SonarQube Cloud Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.ECOS }}
         with:
-          projectBaseDir: Backend
           args: >
             -Dsonar.projectKey=G2-Eco_V1.01
             -Dsonar.organization=g2-eco
+            -Dsonar.projectBaseDir=Backend
             -Dsonar.java.binaries=target/classes
