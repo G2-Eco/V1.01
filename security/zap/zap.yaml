@@ -1,0 +1,99 @@
+env:
+  contexts:
+    - name: "ecommerce-local"
+      urls:
+        - "http://frontend:3000"
+        - "http://backend:8080"
+      includePaths:
+        - "http://frontend:3000.*"
+        - "http://backend:8080.*"
+      excludePaths:
+        - ".*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)(\\?.*)?$"
+        - "http://frontend:3000/_next/static/.*"
+        - "http://frontend:3000/_next/image.*"
+  parameters:
+    failOnError: false
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+      maxBodySizeInBytesToScan: 524288
+
+  # Amorçage des endpoints connus du Backend REST API
+  - type: requestor
+    parameters: {}
+    requests:
+      - url: "http://backend:8080/api/v1/products"
+        method: "GET"
+      - url: "http://backend:8080/api/v1/products/1"
+        method: "GET"
+      - url: "http://backend:8080/api/v1/auth/verify-email?token=test"
+        method: "GET"
+      - url: "http://backend:8080/actuator/prometheus"
+        method: "GET"
+
+  # Exploration classique du Frontend Next.js
+  - type: spider
+    parameters:
+      context: "ecommerce-local"
+      url: "http://frontend:3000"
+      maxDuration: 1
+      maxDepth: 3
+      maxChildren: 10
+
+  # Exploration JavaScript/DOM (Next.js / React) ciblée
+  - type: spiderAjax
+    parameters:
+      context: "ecommerce-local"
+      url: "http://frontend:3000"
+      maxDuration: 1
+      maxCrawlDepth: 3
+      maxCrawlStates: 20
+      browserId: "firefox-headless"
+
+  # Attente de la fin de l'analyse passive (en-têtes, CORS, cookies, fuites d'infos...)
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+
+  # Scan actif ciblé OWASP Top 10 (XSS, injections, misconfigurations...)
+  - type: activeScan
+    parameters:
+      context: "ecommerce-local"
+      maxRuleDurationInMins: 1
+      maxScanDurationInMins: 3
+      threadPerHost: 2
+
+  # Rapport 1 : HTML moderne interactif (le plus lisible dans un navigateur)
+  - type: report
+    parameters:
+      template: "modern"
+      theme: "corporate"
+      reportDir: "/zap/wrk/reports"
+      reportFile: "owasp-zap-report"
+      reportTitle: "Rapport OWASP ZAP - E-Commerce V1.01"
+      reportDescription: "Scan DAST OWASP Top 10 sur le Frontend Next.js et le Backend Spring Boot."
+      displayReport: false
+    risks:
+      - high
+      - medium
+      - low
+      - info
+
+  # Rapport 2 : Markdown détaillé (lisible directement dans l'IDE ou GitHub)
+  - type: report
+    parameters:
+      template: "traditional-md"
+      reportDir: "/zap/wrk/reports"
+      reportFile: "owasp-zap-report"
+      reportTitle: "Rapport OWASP ZAP - E-Commerce V1.01"
+      displayReport: false
+    risks:
+      - high
+      - medium
+      - low
+      - info

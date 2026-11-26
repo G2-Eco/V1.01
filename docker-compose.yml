@@ -49,5 +49,20 @@ services:
       NEXT_PUBLIC_API_URL: http://backend:8080/api/v1
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api/v1
 
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: owasp-zap
+    profiles: ["zap"]
+    depends_on:
+      - backend
+      - frontend
+    user: "1000:1000"
+    environment:
+      HOME: /home/zap
+      JAVA_TOOL_OPTIONS: -Duser.home=/home/zap
+    volumes:
+      - ./security/zap:/zap/wrk:rw
+    command: zap.sh -cmd -dir /home/zap/.ZAP -autorun /zap/wrk/zap.yaml
+
 volumes:
   mysql_data:
