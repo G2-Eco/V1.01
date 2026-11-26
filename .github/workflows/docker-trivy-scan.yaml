@@ -22,7 +22,7 @@ jobs:
         run: |
           docker build -t backend-app:latest -f Backend/dockerfile Backend
 
-      # 3. Run Trivy scan (ECHOUER si HIGH ou CRITICAL)
+      # 3. Run Trivy scan
       - name: Scan Docker image with Trivy (fail on HIGH or CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -32,3 +32,21 @@ jobs:
           ignore-unfixed: false
           exit-code: 1
           format: table
+          output: trivy-report.txt
+
+      - name: Display Trivy report in job summary
+        if: ${{ always() && hashFiles('trivy-report.txt') != '' }}
+        run: |
+          {
+            echo '## Trivy — image du backend'
+            echo '```text'
+            cat trivy-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Trivy report
+        if: ${{ always() && hashFiles('trivy-report.txt') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: trivy-report.txt
