@@ -14,31 +14,47 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+          cache: maven
+          cache-dependency-path: Backend/pom.xml
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build backend (Maven)
-        run: mvn -f Backend/pom.xml clean verify -DskipTests
+      - name: Configure Maven Central mirror
+        run: |
+          mkdir -p ~/.m2
+          cat << 'EOF' > ~/.m2/settings.xml
+          <settings>
+            <mirrors>
+              <mirror>
+                <id>google-maven-central</id>
+                <name>GCS Maven Central mirror</name>
+                <url>https://maven-central.storage-download.googleapis.com/maven2</url>
+                <mirrorOf>central</mirrorOf>
+              </mirror>
+            </mirrors>
+          </settings>
+          EOF
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+      - name: Build and analyze with Maven & SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.ECOS }}
-        with:
-          args: >
-            -Dsonar.projectKey=G2-Eco_V1.01
-            -Dsonar.organization=g2-eco
-            -Dsonar.projectBaseDir=Backend
-            -Dsonar.java.binaries=target/classes
+        run: >
+          mvn -B -f Backend/pom.xml clean verify -DskipTests
+          org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.projectKey=G2-Eco_V1.01
+          -Dsonar.organization=g2-eco
+          -Dsonar.host.url=https://sonarcloud.io
