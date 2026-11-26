@@ -18,6 +18,7 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String tags;
 
+    @Column(length = 500)
     private String mainImage;
 
     private Double rating;

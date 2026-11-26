@@ -14,19 +14,21 @@ services:
       - ./database/init/:/docker-entrypoint-initdb.d
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   backend:
-    build: ./Backend
+    build:
+      context: ./Backend
+      dockerfile: dockerfile
     container_name: backend
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecom?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -34,14 +36,18 @@ services:
       - "8080:8080"
 
   frontend:
-    build: ./FrontEnd
+    build:
+      context: ./FrontEnd
+      dockerfile: dockerfile
     container_name: frontend
     depends_on:
       - backend
     ports:
       - "3000:3000"
     environment:
+      API_BASE_URL: http://backend:8080/api/v1
       NEXT_PUBLIC_API_URL: http://backend:8080/api/v1
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080/api/v1
 
 volumes:
   mysql_data:
