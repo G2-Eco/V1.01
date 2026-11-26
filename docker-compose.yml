@@ -1,6 +1,11 @@
 services:
   mysql:
-    image: mysql:8.0
+    # 1. New: Specify the target image name for Docker Hub
+    image: amvdown/ecom-mysql:latest
+    # 2. New: Use the build context for the custom image
+    build: 
+      context: ./database/init/
+      dockerfile: Dockerfile
     container_name: mysql
     restart: always
     environment:
@@ -9,10 +14,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - ./database/init/:/docker-entrypoint-initdb.d
-      - mysql_data:/var/lib/mysql
+      # 3. Modified: Removed the init volume, keeping only the data volume
+      - mysql_data:/var/lib/mysql 
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 5s
@@ -20,9 +25,15 @@ services:
       retries: 10
 
   backend:
+<<<<<<< HEAD
     build:
       context: ./Backend
       dockerfile: dockerfile
+=======
+    # New: Specify the target image name for Docker Hub
+    image: amvdown/ecom-backend:latest
+    build: ./Backend
+>>>>>>> 63f19bfacfd83d1b0e5a13d52988da6241e5494b
     container_name: backend
     depends_on:
       mysql:
@@ -36,9 +47,15 @@ services:
       - "8080:8080"
 
   frontend:
+<<<<<<< HEAD
     build:
       context: ./FrontEnd
       dockerfile: dockerfile
+=======
+    # New: Specify the target image name for Docker Hub
+    image: amvdown/ecom-frontend:latest
+    build: ./FrontEnd
+>>>>>>> 63f19bfacfd83d1b0e5a13d52988da6241e5494b
     container_name: frontend
     depends_on:
       - backend
